@@ -1,0 +1,2 @@
+# dupechecker
+Duplicate files finder
