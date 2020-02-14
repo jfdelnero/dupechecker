@@ -34,12 +34,12 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2019 Jean-François DEL NERO
+// (c) 2008-2020 Jean-François DEL NERO
 //
 // File : dupechecker.c
 // Contains: Main code
 //
-// Written by:	Jean-François DEL NERO
+// Written by: Jean-François DEL NERO
 //
 // Change History (most recent first):
 //-----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ int write_deloutputfile(char * filename,filelisthead *fl)
 {
 	FILE * duplog;
 	unsigned char signature[16];
-	unsigned long numberoffile,i;
+	unsigned long numberoffile,i,j;
 	filedescription * fileelement;
 
 	memset(signature,0,16);
@@ -122,9 +122,15 @@ int write_deloutputfile(char * filename,filelisthead *fl)
 				if(memcmp(signature,fileelement->md5,16))
 				{
 					fprintf(duplog,"\n");
+					fprintf(duplog,"# %s, %ld bytes, ",fileelement->filename,fileelement->size);
+					for(j=0;j<16;j++)
+					{
+						fprintf(duplog,"%.2X",fileelement->md5[j]);
+					}
+					fprintf(duplog,"\n");
 				}
 
-				fprintf(duplog,"del \"%s\"",fileelement->filepath);
+				fprintf(duplog,"#rm -f \"%s\"",fileelement->filepath);
 				fprintf(duplog,"\n");
 
 				memcpy(signature,fileelement->md5,16);
@@ -145,9 +151,171 @@ int write_deloutputfile(char * filename,filelisthead *fl)
 	}
 }
 
+
+int isinteresting(filedescription * fileelement,char * pathofinterest)
+{
+	unsigned char signature[16];
+	unsigned long path_base_len;
+	int cnt_matching_path,cnt_not_matching_path;
+
+	cnt_not_matching_path = 0;
+	  cnt_matching_path = 0;
+
+	memcpy(signature,fileelement->md5,16);
+
+	path_base_len = strlen(pathofinterest);
+
+	while ( fileelement )
+	{
+		if(!(fileelement->status&IGNORE_FILE))
+		{
+			if(memcmp(signature,fileelement->md5,16))
+			{
+				if(cnt_matching_path && cnt_not_matching_path)
+				{
+					return 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+
+			if(!memcmp(fileelement->filepath, pathofinterest,path_base_len))
+			{
+				cnt_matching_path++;
+			}
+			else
+			{
+				cnt_not_matching_path++;
+			}
+
+			memcpy(signature,fileelement->md5,16);
+		}
+
+		fileelement = fileelement->previouselement;
+	}
+
+	if(cnt_matching_path && cnt_not_matching_path)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+
+}
+
+int filterlist(filelisthead *fl, char * pathofinterest)
+{
+	unsigned char signature[16];
+	unsigned long numberoffile,i,is_interesting;
+	filedescription * fileelement;
+
+	if(!strlen(pathofinterest))
+	{
+		return 0;
+	}
+
+	memset(signature,0,16);
+
+	numberoffile = fl->numberoffile;
+	fileelement = fl->filelist;
+
+	is_interesting = 0;
+
+	i = 0;
+	while ( fileelement && i<numberoffile)
+	{
+		if(!(fileelement->status&IGNORE_FILE))
+		{
+			if(memcmp(signature,fileelement->md5,16))
+			{
+				is_interesting = isinteresting(fileelement,pathofinterest);
+			}
+
+			if(!is_interesting)
+			{
+				fileelement->status |= IGNORE_FILE;
+			}
+
+			memcpy(signature,fileelement->md5,16);
+		}
+
+		fileelement = fileelement->previouselement;
+		i++;
+	}
+
+	return 0;
+}
+
+
+int isOption(int argc, char* argv[],char * paramtosearch,char * argtoparam)
+{
+	int param=1;
+	int i,j;
+
+	char option[512];
+
+	memset(option,0,512);
+	while(param<=argc)
+	{
+		if(argv[param])
+		{
+			if(argv[param][0]=='-')
+			{
+				memset(option,0,512);
+
+				j=0;
+				i=1;
+				while( argv[param][i] && argv[param][i]!=':')
+				{
+					option[j]=argv[param][i];
+					i++;
+					j++;
+				}
+
+				if( !strcmp(option,paramtosearch) )
+				{
+					if(argtoparam)
+					{
+						if(argv[param][i]==':')
+						{
+							i++;
+							j=0;
+							while( argv[param][i] )
+							{
+								argtoparam[j]=argv[param][i];
+								i++;
+								j++;
+							}
+							argtoparam[j]=0;
+							return 1;
+						}
+						else
+						{
+							return -1;
+						}
+					}
+					else
+					{
+						return 1;
+					}
+				}
+			}
+		}
+		param++;
+	}
+
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
 	char outputfilename[512];
+	char pathfilter[512];
+
 	int numberofoccur;
 	int number_of_file;
 
@@ -158,29 +326,20 @@ int main(int argc, char* argv[])
 
 	filelisthead * possibleduplist;
 	filelisthead * possibleduplist2;
-	char * fnameptr;
-
 	int i;
 	int numberoffile;
 
 	printf("dupechecker v1.0\n");
-	printf("(c) 2008-2019 Jean-François DEL NERO\n");
+	printf("(c) 2008-2020 Jean-François DEL NERO\n");
 
 	outputfilename[0] = 0;
-	i=0;
-	do
+	if( isOption( argc, argv,"o",(char*)&outputfilename) != 1 )
 	{
-		if(argv[i])
-		{
-			fnameptr=strstr(argv[i],"-o:");
-			if(fnameptr)
-			{
-				sprintf(outputfilename,"%s",&fnameptr[3]);
-				i=argc;
-			}
-		}
-		i++;
-	}while(i<argc);
+		goto printsyntaxandexit;
+	}
+
+	pathfilter[0] = 0;
+	isOption( argc, argv,"f",(char*)&pathfilter);
 
 	if(argv[1] && strlen(outputfilename))
 	{
@@ -202,7 +361,7 @@ int main(int argc, char* argv[])
 		i=1;
 		while(argv[i])
 		{
-			if(!strstr(argv[i],"-o:"))
+			if( argv[i][0] != '-' )
 			{
 				filesystemtree->number_of_entry++;
 				filesystemtree->filedescription_array = (filedescription**) realloc(filesystemtree->filedescription_array,filesystemtree->number_of_entry*sizeof(filedescription*));
@@ -238,7 +397,7 @@ int main(int argc, char* argv[])
 		tabfilefound = getfilelist(filesystemtree,tabfilefound,&numberoffile);
 
 		// Sort the list by file size.
-		quicksort_file(tabfilefound,0,numberoffile-1);
+		quicksort_file_size(tabfilefound,0,numberoffile-1);
 
 		// Remove files with unique file size from the list
 		tabfilefound = cleanup_filelist(tabfilefound,&numberoffile);
@@ -251,6 +410,8 @@ int main(int argc, char* argv[])
 			printf("%.2f%c\r",((float)(i)/(float)(numberoffile-1))*(float)100,'%');
 			compute_md5(tabfilefound[i],1);
 		}
+
+		quicksort_file_size_and_md5(tabfilefound,0,numberoffile-1);
 
 		printf("\n\n%d partial md5 calculated)\n\n",numberoffile);
 
@@ -270,6 +431,8 @@ int main(int argc, char* argv[])
 			printf("%.2f%c\r",((float)(i)/(float)(numberoffile-1))*(float)100,'%');
 			compute_md5(tabfilefound[i],0);
 		}
+
+		quicksort_file_size_and_md5(tabfilefound,0,numberoffile-1);
 
 		// Remove files with unique MD5 from the list.
 		tabfilefound = cleanup_filelist_md5(tabfilefound,&numberoffile);
@@ -355,7 +518,7 @@ int main(int argc, char* argv[])
 				{
 					printf("%.2f%c\r",((float)(i)/(float)(possibleduplist->numberoffile-1))*(float)100,'%');
 
-					if(!memcmp(tempfile->md5,tabfilepossibledup[i]->md5,16))
+					if(!memcmp(tempfile->md5,tabfilepossibledup[i]->md5,16) && (tempfile->size == tabfilepossibledup[i]->size))
 					{
 						// add the file
 						numberofoccur++;
@@ -400,8 +563,12 @@ int main(int argc, char* argv[])
 
 		printf("Writing output file %s\n",outputfilename);
 
-		write_outputfile(outputfilename,possibleduplist2);
-		//write_deloutputfile(outputfilename,possibleduplist2);
+		//write_deloutputfile("before_filter.txt",possibleduplist2);
+
+		filterlist(possibleduplist2, (char*)&pathfilter);
+
+		//write_outputfile(outputfilename,possibleduplist2);
+		write_deloutputfile(outputfilename,possibleduplist2);
 
 		dealloc_filelisthead(possibleduplist2);
 		freefiletree(filesystemtree);
@@ -414,6 +581,10 @@ int main(int argc, char* argv[])
 
 fatalerror:
 	printf("Memory allocation error !\n");
+	return -1;
+
+printsyntaxandexit:
+	printf("Syntax: %s [source dir(s)] [-o:ouputfile]  [-f:path_filter]\n",argv[0]);
 	return -1;
 }
 

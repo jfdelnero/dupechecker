@@ -238,7 +238,7 @@ int browse_and_make_fs_tree(filedescription * entrypoint)
 			}
 			else
 			{
-				//printf("checking file %s, %dB\n",FindFileData.filename,FindFileData.size);
+				//printf("checking file %s, %dB\n",FindFileData.filename,FindFileData.size)
 
 				if(FindFileData.size)
 				{
@@ -291,11 +291,12 @@ alloc_error:
 	return -1;
 }
 
-void quicksort_file(filedescription * tabfile[], int index_gauche,int index_droit)
+void quicksort_file_size(filedescription * tabfile[], int index_gauche,int index_droit)
 {
 	filedescription * tampon;
 	uint64_t valeur_pivot;//, tampon;
 	int i, j;
+
 
 	if(index_gauche < index_droit)
 	{
@@ -329,8 +330,80 @@ void quicksort_file(filedescription * tabfile[], int index_gauche,int index_droi
 		tabfile[i] = tabfile[index_droit];
 		tabfile[index_droit] = tampon;
 
-		quicksort_file(tabfile, index_gauche, i-1);
-		quicksort_file(tabfile, i+1, index_droit);
+		quicksort_file_size(tabfile, index_gauche, i-1);
+		quicksort_file_size(tabfile, i+1, index_droit);
+	}
+}
+
+void quicksort_file_md5(filedescription * tabfile[], int index_gauche,int index_droit)
+{
+	filedescription * tampon;
+	unsigned char * md5buf;
+	int i, j;
+
+	if(index_gauche < index_droit)
+	{
+		md5buf = tabfile[index_droit]->md5;
+
+		i = index_gauche - 1;
+		j = index_droit;
+
+		for(;;)
+		{
+			do
+			{
+				i++;
+			}while( memcmp(tabfile[i]->md5,md5buf,16) < 0 );
+
+			do
+			{
+				j--;
+			}while( ( memcmp(tabfile[j]->md5,md5buf,16) > 0 ) && j );
+
+			if( i>=j )
+			{
+				break;
+			}
+
+			tampon  = tabfile[i];
+			tabfile[i] = tabfile [j];
+			tabfile[j] = tampon;
+		}
+
+		tampon = tabfile[i];
+		tabfile[i] = tabfile[index_droit];
+		tabfile[index_droit] = tampon;
+
+		quicksort_file_md5(tabfile, index_gauche, i-1);
+		quicksort_file_md5(tabfile, i+1, index_droit);
+	}
+}
+
+void quicksort_file_size_and_md5(filedescription * tabfile[], int index_gauche,int index_droit)
+{
+	int cur_size,index,start_index;
+
+	//quicksort_file_size(tabfile,index_gauche,index_droit);
+
+	cur_size = tabfile[index_gauche]->size;
+
+	start_index = index_gauche;
+	index = index_gauche;
+
+	while( index < index_droit )
+	{
+		start_index = index;
+		cur_size = tabfile[index]->size;
+
+		while( index < index_droit && (cur_size == tabfile[index]->size) )
+		{
+			index++;
+		}
+
+		if((index - start_index)>1)
+		{
+			quicksort_file_md5(&tabfile[start_index], 0, (index - start_index) - 1 );
+		}
 	}
 }
 
@@ -459,10 +532,11 @@ filedescription ** cleanup_filelist_md5(filedescription * tabfile[], int * numbe
 
 		while(i<(*number_of_files-1))
 		{
+
 			if(
-                            ( memcmp(tabfile[i]->md5,tabfile[i-1]->md5,16) && memcmp(tabfile[i]->md5,tabfile[i+1]->md5,16) ) ||
-                            !( tabfile[i]->status & (PARTIAL_MD5_DONE|FULL_MD5_DONE) )
-                          )
+					( memcmp(tabfile[i]->md5,tabfile[i-1]->md5,16) && memcmp(tabfile[i]->md5,tabfile[i+1]->md5,16) ) ||
+					!( tabfile[i]->status & (PARTIAL_MD5_DONE|FULL_MD5_DONE) )
+				)
 			{
 				tabfile[i]->status |= IGNORE_FILE;
 			}

@@ -76,7 +76,10 @@ void free_fileelement(filedescription * filetofree);
 void compute_md5(filedescription * newfile,int partial);
 int browse_and_make_fs_tree(filedescription * entrypoint);
 
-void quicksort_file(filedescription * tabfile[], int index_gauche,int index_droit);
+void quicksort_file_size(filedescription * tabfile[], int index_gauche,int index_droit);
+void quicksort_file_md5(filedescription * tabfile[], int index_gauche,int index_droit);
+void quicksort_file_size_and_md5(filedescription * tabfile[], int index_gauche,int index_droit);
+
 filedescription ** cleanup_filelist(filedescription * tabfile[],int * numberoffile);
 filedescription ** cleanup_filelist_md5(filedescription * tabfile[],int * number_of_files);
 filedescription * create_filedesctription(char * path,char * filename,uint64_t filesize, int makemd5);
