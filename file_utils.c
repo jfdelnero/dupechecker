@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (C) 2006-2019 Jean-François DEL NERO
+// Copyright (C) 2006-2022 Jean-François DEL NERO
 //
 // This file is part of the DupeChecker software
 //
@@ -34,7 +34,7 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2019 Jean-François DEL NERO
+// (c) 2008-2022 Jean-François DEL NERO
 //
 // File : file_utils.c
 // Contains: UTF-8 / Ascii path file system functions
@@ -57,6 +57,8 @@
 #include <time.h>
 
 #include <stdint.h>
+
+#include "types_def.h"
 
 #include "file_utils.h"
 
@@ -241,7 +243,7 @@ FILE *hxc_fopen (const char *filename, const char *mode)
 	return stream;
 }
 
-int hxc_fread(void * ptr, size_t size, FILE *f)
+int hxc_fread(void * ptr, SIZE_TYPE size, FILE *f)
 {
 	if( fread(ptr,size,1,f) != 1 )
 	{

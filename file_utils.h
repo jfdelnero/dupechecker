@@ -21,7 +21,7 @@ char * str_lower(char * str);
 int hxc_open (const char *filename, int flags, ...);
 
 FILE *hxc_fopen (const char *filename, const char *mode);
-int hxc_fread(void * ptr, size_t size, FILE *f);
+int hxc_fread(void * ptr, SIZE_TYPE size, FILE *f);
 char * hxc_fgets(char * str, int num, FILE *f);
 int hxc_fclose(FILE * f);
 
@@ -34,7 +34,7 @@ typedef struct filefoundinfo_
 {
 	int isdirectory;
 	char filename[256];
-	uint64_t size;
+	SIZE_TYPE size;
 }filefoundinfo;
 
 void * find_first_file(char *folder, char *file, filefoundinfo* fileinfo);

@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (C) 2006-2019 Jean-François DEL NERO
+// Copyright (C) 2006-2022 Jean-François DEL NERO
 //
 // This file is part of the DupeChecker software
 //
@@ -34,7 +34,7 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2019 Jean-François DEL NERO
+// (c) 2008-2022 Jean-François DEL NERO
 //
 // File : file_tree_db.c
 // Contains: Files tree database
@@ -49,6 +49,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "types_def.h"
+
 #include "md5.h"
 #include "file_tree_db.h"
 #include "file_utils.h"
@@ -60,8 +62,8 @@ void compute_md5(filedescription * newfile,int partial)
 	unsigned char signature[16],i;
 	unsigned char * checkbuffer;
 	FILE * filetocheck;
-	unsigned int sizetocheck;
-	uint64_t byteremaing;
+	SIZE_TYPE sizetocheck;
+	SIZE_TYPE byteremaing;
 	int status;
 
 	status=0;
@@ -172,7 +174,7 @@ void compute_md5(filedescription * newfile,int partial)
 	}
 }
 
-int browse_and_make_fs_tree(filedescription * entrypoint)
+CNT_TYPE browse_and_make_fs_tree(filedescription * entrypoint)
 {
 	void * hfindfile;
 	filefoundinfo FindFileData;
@@ -181,9 +183,10 @@ int browse_and_make_fs_tree(filedescription * entrypoint)
 	char * fullpath;
 	filedescription * new_entrypoint;
 
-	int number_of_file;
+	CNT_TYPE number_of_files;
 
-	number_of_file=0;
+	number_of_files=0;
+
 	hfindfile = find_first_file(entrypoint->filepath,"*.*", &FindFileData);
 	if( hfindfile )
 	{
@@ -219,7 +222,7 @@ int browse_and_make_fs_tree(filedescription * entrypoint)
 
 					new_entrypoint->status = new_entrypoint->status|FOLDER;
 
-					number_of_file = browse_and_make_fs_tree(new_entrypoint)+number_of_file;
+					number_of_files = browse_and_make_fs_tree(new_entrypoint)+number_of_files;
 
 					//browse_and_convert_directory(fullpath,destinationfolder,file,filelist);
 					entrypoint->number_of_entry++;
@@ -259,7 +262,7 @@ int browse_and_make_fs_tree(filedescription * entrypoint)
 					new_entrypoint->filepath=alloc_and_print(fullpath);
 					new_entrypoint->size=FindFileData.size;
 
-					number_of_file++;
+					number_of_files++;
 
 					entrypoint->number_of_entry++;
 					entrypoint->filedescription_array=(filedescription**) realloc(entrypoint->filedescription_array,entrypoint->number_of_entry*sizeof(filedescription*));
@@ -284,18 +287,18 @@ int browse_and_make_fs_tree(filedescription * entrypoint)
 
 	find_close(hfindfile);
 
-	return number_of_file;
+	return number_of_files;
 
 alloc_error:
 	printf("browse_and_make_fs_tree : Memory allocation error !\n");
 	return -1;
 }
 
-void quicksort_file_size(filedescription * tabfile[], int index_gauche,int index_droit)
+void quicksort_file_size(filedescription * tabfile[], CNT_TYPE index_gauche,CNT_TYPE index_droit)
 {
 	filedescription * tampon;
 	uint64_t valeur_pivot;//, tampon;
-	int i, j;
+	CNT_TYPE i, j;
 
 
 	if(index_gauche < index_droit)
@@ -335,11 +338,11 @@ void quicksort_file_size(filedescription * tabfile[], int index_gauche,int index
 	}
 }
 
-void quicksort_file_md5(filedescription * tabfile[], int index_gauche,int index_droit)
+void quicksort_file_md5(filedescription * tabfile[], CNT_TYPE index_gauche,CNT_TYPE index_droit)
 {
 	filedescription * tampon;
 	unsigned char * md5buf;
-	int i, j;
+	CNT_TYPE i, j;
 
 	if(index_gauche < index_droit)
 	{
@@ -379,9 +382,10 @@ void quicksort_file_md5(filedescription * tabfile[], int index_gauche,int index_
 	}
 }
 
-void quicksort_file_size_and_md5(filedescription * tabfile[], int index_gauche,int index_droit)
+void quicksort_file_size_and_md5(filedescription * tabfile[], CNT_TYPE index_gauche,CNT_TYPE index_droit)
 {
-	int cur_size,index,start_index;
+	SIZE_TYPE cur_size;
+	CNT_TYPE index,start_index;
 
 	//quicksort_file_size(tabfile,index_gauche,index_droit);
 
@@ -415,8 +419,8 @@ void print_file_desc(filedescription * file)
 	printf("%s\n",file->filename);
 	printf("%s\n",file->filepath);
 	printf("Status : 0x%.2x\n",file->status);
-	printf("Size : %ld\n",file->size);
-	printf("Number of Entry : %d\n",file->number_of_entry);
+	printf("Size : "PRT_SIZE_TYPE"\n",file->size);
+	printf("Number of Entry : "PRT_CNT_TYPE"\n",file->number_of_entry);
 
 	printf("MD5 : ");
 
@@ -430,9 +434,10 @@ void print_file_desc(filedescription * file)
 	return;
 }
 
-filedescription ** duplicate_file_array(filedescription * file_array[], int * number_of_files)
+filedescription ** duplicate_file_array(filedescription * file_array[], CNT_TYPE * number_of_files)
 {
-	unsigned int i,j,count;
+	CNT_TYPE i,j;
+	CNT_TYPE count;
 	filedescription ** new_array;
 
 	new_array = 0;
@@ -472,9 +477,9 @@ filedescription ** duplicate_file_array(filedescription * file_array[], int * nu
 	return new_array;
 }
 
-filedescription ** cleanup_filelist(filedescription * tabfile[], int * number_of_files)
+filedescription ** cleanup_filelist(filedescription * tabfile[], CNT_TYPE * number_of_files)
 {
-	int i;
+	CNT_TYPE i;
 	filedescription ** tab;
 
 	tab = 0;
@@ -512,9 +517,9 @@ filedescription ** cleanup_filelist(filedescription * tabfile[], int * number_of
 	return tab;
 }
 
-filedescription ** cleanup_filelist_md5(filedescription * tabfile[], int * number_of_files)
+filedescription ** cleanup_filelist_md5(filedescription * tabfile[], CNT_TYPE * number_of_files)
 {
-	int i;
+	CNT_TYPE i;
 	filedescription ** tab;
 
 	tab = 0;
@@ -567,7 +572,7 @@ filedescription ** cleanup_filelist_md5(filedescription * tabfile[], int * numbe
 }
 
 
-filedescription * create_filedesctription(char * path,char * filename,uint64_t filesize, int makemd5)
+filedescription * create_filedesctription(char * path, char * filename, SIZE_TYPE filesize, int makemd5)
 {
 	unsigned char signature[16],i;
 	filedescription * newfile;
@@ -607,7 +612,7 @@ filedescription * create_filedesctription(char * path,char * filename,uint64_t f
 	return newfile;
 }
 
-void add_file_element(char * path,char * filename,uint64_t filesize, int makemd5,filelisthead * listhead,unsigned char * md5)
+void add_file_element(char * path, char * filename, SIZE_TYPE filesize, int makemd5, filelisthead * listhead, unsigned char * md5)
 {
 	filedescription * thefile;
 
@@ -629,7 +634,7 @@ void add_file_element(char * path,char * filename,uint64_t filesize, int makemd5
 
 void dealloc_filelisthead(filelisthead *fl)
 {
-	unsigned long numberoffile,i;
+	CNT_TYPE numberoffile,i;
 	filedescription * fileelement;
 	filedescription * tmp_fileelement;
 
@@ -656,7 +661,7 @@ void dealloc_filelisthead(filelisthead *fl)
 
 filedescription ** tabification(filelisthead * filelist)
 {
-	unsigned long i;
+	CNT_TYPE i;
 	filedescription ** tabelement;
 	filedescription * fileelement;
 
@@ -682,9 +687,9 @@ filedescription ** tabification(filelisthead * filelist)
 	return tabelement;
 }
 
-filedescription ** getfilelist(filedescription * fs_tree,filedescription ** filelist,int * numberoffile)
+filedescription ** getfilelist(filedescription * fs_tree, filedescription ** filelist, CNT_TYPE * numberoffile)
 {
-	unsigned long i;
+	CNT_TYPE i;
 
 	i=0;
 	while( i < fs_tree->number_of_entry )
@@ -721,7 +726,7 @@ void free_fileelement(filedescription * filetofree)
 
 void freefiletree(filedescription * fs_tree)
 {
-	unsigned long i;
+	CNT_TYPE i;
 
 	i=0;
 	while( i < fs_tree->number_of_entry )
@@ -742,10 +747,10 @@ void freefiletree(filedescription * fs_tree)
 	return;
 }
 
-uint64_t get_total_size(filedescription ** fileslist, int numberoffile)
+SIZE_TYPE get_total_size(filedescription ** fileslist, CNT_TYPE numberoffile)
 {
-	unsigned long i;
-	uint64_t totalsize;
+	CNT_TYPE i;
+	SIZE_TYPE totalsize;
 
 	totalsize = 0;
 

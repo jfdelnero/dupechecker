@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (C) 2006-2019 Jean-François DEL NERO
+// Copyright (C) 2006-2022 Jean-François DEL NERO
 //
 // This file is part of the DupeChecker software
 //
@@ -34,7 +34,7 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2020 Jean-François DEL NERO
+// (c) 2008-2022 Jean-François DEL NERO
 //
 // File : dupechecker.c
 // Contains: Main code
@@ -52,6 +52,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "types_def.h"
+
 #include "dupechecker.h"
 #include "file_utils.h"
 #include "file_tree_db.h"
@@ -61,7 +63,7 @@
 int write_outputfile(char * filename,filelisthead *fl)
 {
 	FILE * duplog;
-	unsigned long numberoffile,i,j;
+	CNT_TYPE numberoffile,i,j;
 	filedescription * fileelement;
 
 	duplog = fopen(filename,"w");
@@ -75,7 +77,7 @@ int write_outputfile(char * filename,filelisthead *fl)
 		{
 			if(!(fileelement->status&IGNORE_FILE))
 			{
-				fprintf(duplog,"%s;%s;%ld;",fileelement->filename,fileelement->filepath,fileelement->size);
+				fprintf(duplog,"%s;%s;"PRT_SIZE_TYPE";",fileelement->filename,fileelement->filepath,fileelement->size);
 				for(j=0;j<16;j++)
 				{
 					fprintf(duplog,"%.2X",fileelement->md5[j]);
@@ -103,7 +105,7 @@ int write_deloutputfile(char * filename,filelisthead *fl)
 {
 	FILE * duplog;
 	unsigned char signature[16];
-	unsigned long numberoffile,i,j;
+	CNT_TYPE numberoffile,i,j;
 	filedescription * fileelement;
 
 	memset(signature,0,16);
@@ -122,7 +124,7 @@ int write_deloutputfile(char * filename,filelisthead *fl)
 				if(memcmp(signature,fileelement->md5,16))
 				{
 					fprintf(duplog,"\n");
-					fprintf(duplog,"# %s, %ld bytes, ",fileelement->filename,fileelement->size);
+					fprintf(duplog,"# %s, "PRT_SIZE_TYPE" bytes, ",fileelement->filename,fileelement->size);
 					for(j=0;j<16;j++)
 					{
 						fprintf(duplog,"%.2X",fileelement->md5[j]);
@@ -156,10 +158,10 @@ int isinteresting(filedescription * fileelement,char * pathofinterest)
 {
 	unsigned char signature[16];
 	unsigned long path_base_len;
-	int cnt_matching_path,cnt_not_matching_path;
+	CNT_TYPE cnt_matching_path,cnt_not_matching_path;
 
-	cnt_not_matching_path = 0;
-	  cnt_matching_path = 0;
+    cnt_not_matching_path = 0;
+    cnt_matching_path = 0;
 
 	memcpy(signature,fileelement->md5,16);
 
@@ -210,7 +212,8 @@ int isinteresting(filedescription * fileelement,char * pathofinterest)
 int filterlist(filelisthead *fl, char * pathofinterest)
 {
 	unsigned char signature[16];
-	unsigned long numberoffile,i,is_interesting;
+	CNT_TYPE numberoffile,i;
+	int is_interesting;
 	filedescription * fileelement;
 
 	if(!strlen(pathofinterest))
@@ -316,8 +319,8 @@ int main(int argc, char* argv[])
 	char outputfilename[512];
 	char pathfilter[512];
 
-	int numberofoccur;
-	int number_of_file;
+	CNT_TYPE numberofoccur;
+	CNT_TYPE number_of_file;
 
 	filedescription * filesystemtree;
 	filedescription * tempfile;
@@ -326,11 +329,11 @@ int main(int argc, char* argv[])
 
 	filelisthead * possibleduplist;
 	filelisthead * possibleduplist2;
-	int i;
-	int numberoffile;
+	CNT_TYPE i;
+	CNT_TYPE numberoffile;
 
-	printf("dupechecker v1.0\n");
-	printf("(c) 2008-2020 Jean-François DEL NERO\n");
+	printf("dupechecker v1.1\n");
+	printf("(c) 2008-2022 Jean-François DEL NERO\n");
 
 	outputfilename[0] = 0;
 	if( isOption( argc, argv,"o",(char*)&outputfilename) != 1 )
@@ -384,7 +387,7 @@ int main(int argc, char* argv[])
 			i++;
 		}
 
-		printf("\n\n%d files found (total size: ",number_of_file);
+		printf("\n\n"PRT_CNT_TYPE" files found (total size: ",number_of_file);
 		printsize(filesystemtree->size);
 		printf(")\n\n");
 
@@ -402,7 +405,7 @@ int main(int argc, char* argv[])
 		// Remove files with unique file size from the list
 		tabfilefound = cleanup_filelist(tabfilefound,&numberoffile);
 
-		printf("\n\n%d possibles dup\n\n",numberoffile);
+		printf("\n\n"PRT_CNT_TYPE" possibles dup\n\n",numberoffile);
 
 		// Do fast MD5 on the files headers.
 		for(i=0;i<numberoffile;i++)
@@ -413,7 +416,7 @@ int main(int argc, char* argv[])
 
 		quicksort_file_size_and_md5(tabfilefound,0,numberoffile-1);
 
-		printf("\n\n%d partial md5 calculated)\n\n",numberoffile);
+		printf("\n\n"PRT_CNT_TYPE" partial md5 calculated)\n\n",numberoffile);
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -422,7 +425,7 @@ int main(int argc, char* argv[])
 		// Remove files with unique MD5 from the list.
 		tabfilefound = cleanup_filelist_md5(tabfilefound,&numberoffile);
 
-		printf("\n\n%d possibles dup\n\n",numberoffile);
+		printf("\n\n"PRT_CNT_TYPE" possibles dup\n\n",numberoffile);
 
 		printf("PASS 4 : Full MD5... :\n");
 
@@ -437,7 +440,7 @@ int main(int argc, char* argv[])
 		// Remove files with unique MD5 from the list.
 		tabfilefound = cleanup_filelist_md5(tabfilefound,&numberoffile);
 
-		printf("\n\n%d possible dup (total size: ",numberoffile);
+		printf("\n\n"PRT_CNT_TYPE" possible dup (total size: ",numberoffile);
 
 		printsize(get_total_size(tabfilefound,numberoffile));
 
@@ -452,7 +455,7 @@ int main(int argc, char* argv[])
 		{
 			memset(possibleduplist,0,sizeof(filelisthead));
 
-			numberofoccur=0;
+			numberofoccur = 0;
 
 			if(numberoffile && tabfilefound)
 			{
@@ -485,7 +488,7 @@ int main(int argc, char* argv[])
 				{
 					add_file_element(tempfile->filepath,tempfile->filename,tempfile->size,0,possibleduplist,tempfile->md5);
 					// add the file
-					numberofoccur=0;
+					numberofoccur = 0;
 				}
 
 				//free_fileelement(tempfile);
@@ -493,7 +496,7 @@ int main(int argc, char* argv[])
 				free(tabfilefound);
 			}
 
-			printf("\n\n%d full md5 calculated (total size: ",possibleduplist->numberoffile);
+			printf("\n\n"PRT_CNT_TYPE" full md5 calculated (total size: ",possibleduplist->numberoffile);
 			printsize(possibleduplist->totalsize);
 			printf(")\n\n");
 
@@ -510,7 +513,7 @@ int main(int argc, char* argv[])
 		{
 			memset(possibleduplist2,0,sizeof(filelisthead));
 
-			numberofoccur=0;
+			numberofoccur = 0;
 			if(possibleduplist->numberoffile)
 			{
 				tempfile = tabfilepossibledup[0];
@@ -551,7 +554,7 @@ int main(int argc, char* argv[])
 			}
 
 
-			printf("\n\n%d dup (total size: ",possibleduplist2->numberoffile);
+			printf("\n\n"PRT_CNT_TYPE" dup (total size: ",possibleduplist2->numberoffile);
 			printsize(possibleduplist2->totalsize);
 			printf(")\n\n");
 		}

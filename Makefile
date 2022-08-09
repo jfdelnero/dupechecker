@@ -1,12 +1,11 @@
-CC=gcc
 
-UNAME := $(shell uname)
+CC := gcc
 
-CFLAGS=-O3 -Wall
+CFLAGS := -O3 -Wall -D_FILE_OFFSET_BITS=64
 
-LDFLAGS=
+LDFLAGS :=
 
-EXEC=dupechecker
+EXEC = dupechecker
 
 all: $(EXEC)
 

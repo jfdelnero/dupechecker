@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (C) 2006-2019 Jean-François DEL NERO
+// Copyright (C) 2006-2022 Jean-François DEL NERO
 //
 // This file is part of the DupeChecker software
 //
@@ -34,7 +34,7 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2019 Jean-François DEL NERO
+// (c) 2008-2022 Jean-François DEL NERO
 //
 // File : utils.c
 // Contains: utils functions
@@ -49,12 +49,15 @@
 #include <stdint.h>
 #include <string.h>
 
-void printsize(uint64_t size)
+#include "types_def.h"
+
+void printsize(SIZE_TYPE size)
 {
-	uint64_t t;
+	SIZE_TYPE t;
+
 	if(size<1024) // octets
 	{
-		printf("%ld B ",size);
+		printf(PRT_SIZE_TYPE" B ",size);
 	}
 	else
 	{

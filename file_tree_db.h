@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (C) 2006-2019 Jean-François DEL NERO
+// Copyright (C) 2006-2022 Jean-François DEL NERO
 //
 // This file is part of the DupeChecker software
 //
@@ -34,7 +34,7 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2019 Jean-François DEL NERO
+// (c) 2008-2022 Jean-François DEL NERO
 //
 // File : file_tree_db.c
 // Contains: Files tree database
@@ -52,8 +52,8 @@ typedef struct filedescription_
 	char * filepath;
 	char * filename;
 	unsigned char status;
-	uint64_t size;
-	int number_of_entry;
+	SIZE_TYPE size;
+	CNT_TYPE number_of_entry;
 	struct filedescription_ ** filedescription_array;
 	unsigned char md5[16];
 	void * previouselement;
@@ -62,8 +62,8 @@ typedef struct filedescription_
 typedef struct filelisthead_
 {
 	filedescription * filelist;
-	unsigned int numberoffile;
-	uint64_t totalsize;
+	CNT_TYPE numberoffile;
+	SIZE_TYPE totalsize;
 }filelisthead;
 
 #define PARTIAL_MD5_DONE 0x01
@@ -74,18 +74,18 @@ typedef struct filelisthead_
 void free_fileelement(filedescription * filetofree);
 
 void compute_md5(filedescription * newfile,int partial);
-int browse_and_make_fs_tree(filedescription * entrypoint);
+CNT_TYPE browse_and_make_fs_tree(filedescription * entrypoint);
 
-void quicksort_file_size(filedescription * tabfile[], int index_gauche,int index_droit);
-void quicksort_file_md5(filedescription * tabfile[], int index_gauche,int index_droit);
-void quicksort_file_size_and_md5(filedescription * tabfile[], int index_gauche,int index_droit);
+void quicksort_file_size(filedescription * tabfile[], CNT_TYPE index_gauche, CNT_TYPE index_droit);
+void quicksort_file_md5(filedescription * tabfile[], CNT_TYPE index_gauche, CNT_TYPE index_droit);
+void quicksort_file_size_and_md5(filedescription * tabfile[], CNT_TYPE index_gauche, CNT_TYPE index_droit);
 
-filedescription ** cleanup_filelist(filedescription * tabfile[],int * numberoffile);
-filedescription ** cleanup_filelist_md5(filedescription * tabfile[],int * number_of_files);
-filedescription * create_filedesctription(char * path,char * filename,uint64_t filesize, int makemd5);
-void add_file_element(char * path,char * filename,uint64_t filesize, int makemd5,filelisthead * listhead,unsigned char * md5);
+filedescription ** cleanup_filelist(filedescription * tabfile[], CNT_TYPE * numberoffile);
+filedescription ** cleanup_filelist_md5(filedescription * tabfile[], CNT_TYPE * number_of_files);
+filedescription * create_filedesctription(char * path, char * filename, SIZE_TYPE filesize, int makemd5);
+void add_file_element(char * path, char * filename, SIZE_TYPE filesize, int makemd5, filelisthead * listhead, unsigned char * md5);
 filedescription ** tabification(filelisthead * filelist);
-filedescription ** getfilelist(filedescription * fs_tree,filedescription ** filelist,int * numberoffile);
+filedescription ** getfilelist(filedescription * fs_tree, filedescription ** filelist, CNT_TYPE * numberoffile);
 void dealloc_filelisthead(filelisthead *fl);
 
 void freefiletree(filedescription * fs_tree);
@@ -93,5 +93,5 @@ void freefiletree(filedescription * fs_tree);
 void print_file_desc(filedescription * file);
 
 void free_fileelement(filedescription * filetofree);
-uint64_t get_total_size(filedescription ** fileslist, int numberoffile);
+SIZE_TYPE get_total_size(filedescription ** fileslist, CNT_TYPE numberoffile);
 

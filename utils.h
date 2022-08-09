@@ -1,6 +1,6 @@
 /*
 //
-// Copyright (C) 2006-2019 Jean-François DEL NERO
+// Copyright (C) 2006-2022 Jean-François DEL NERO
 //
 // This file is part of the DupeChecker software
 //
@@ -34,7 +34,7 @@
 //-- Contact: hxc2001<at>hxc2001.com ------------------- https://hxc2001.com --
 //-----------------------------------------------------------------------------
 // DupeChecker
-// (c) 2008-2019 Jean-François DEL NERO
+// (c) 2008-2022 Jean-François DEL NERO
 //
 // File : utils.c
 // Contains: utils functions
@@ -45,4 +45,5 @@
 //-----------------------------------------------------------------------------
 
 char * alloc_and_print(char * string);
-void printsize(uint64_t size);
+void printsize(SIZE_TYPE size);
+
