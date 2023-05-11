@@ -130,9 +130,14 @@ int write_deloutputfile(char * filename,filelisthead *fl)
 						fprintf(duplog,"%.2X",fileelement->md5[j]);
 					}
 					fprintf(duplog,"\n");
+
+					fprintf(duplog,"##rm -f \"%s\"",fileelement->filepath);
+				}
+				else
+				{
+					fprintf(duplog,"#rm -f \"%s\"",fileelement->filepath);
 				}
 
-				fprintf(duplog,"#rm -f \"%s\"",fileelement->filepath);
 				fprintf(duplog,"\n");
 
 				memcpy(signature,fileelement->md5,16);
@@ -160,8 +165,8 @@ int isinteresting(filedescription * fileelement,char * pathofinterest)
 	unsigned long path_base_len;
 	CNT_TYPE cnt_matching_path,cnt_not_matching_path;
 
-    cnt_not_matching_path = 0;
-    cnt_matching_path = 0;
+	cnt_not_matching_path = 0;
+	cnt_matching_path = 0;
 
 	memcpy(signature,fileelement->md5,16);
 
@@ -206,7 +211,6 @@ int isinteresting(filedescription * fileelement,char * pathofinterest)
 	{
 		return 0;
 	}
-
 }
 
 int filterlist(filelisthead *fl, char * pathofinterest)

@@ -44,8 +44,8 @@
 // Change History (most recent first):
 //-----------------------------------------------------------------------------
 
-#define PARTIALMD5CHECKBUFFERSIZE 8*1024
-#define BUFFERSIZE 64*1024*4
+#define PARTIALMD5CHECKBUFFERSIZE (2*1024)
+#define BUFFERSIZE (1*1024*1024)
 
 typedef struct filedescription_
 {
